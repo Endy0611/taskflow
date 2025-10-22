@@ -1,0 +1,217 @@
+// src/services/http.js
+import * as Api from "../Implement/api.js";
+
+const DEV = import.meta.env.DEV;
+const RUNTIME_BASE =
+  Api.API_BASE ??
+  import.meta.env.VITE_API_BASE ??
+  import.meta.env.VITE_BASE_URL ??
+  "https://taskflow-api.istad.co";
+
+export const API_BASE = (DEV ? "/api" : RUNTIME_BASE).replace(/\/+$/, "");
+
+export const getAuthToken =
+  Api.getAuthToken ??
+  (() =>
+    localStorage.getItem("auth_token") ||
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("jwt") ||
+    "");
+
+const isFormOrBlob = (body) =>
+  (typeof FormData !== "undefined" && body instanceof FormData) ||
+  (typeof Blob !== "undefined" && body instanceof Blob);
+
+const buildUrl = (path) => {
+  if (/^https?:\/\//i.test(path)) return path;
+  const clean = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE}${clean}`;
+};
+
+const getCookie = (name) => {
+  if (typeof document === "undefined") return "";
+  const m = document.cookie.match(
+    new RegExp(`(?:^|; )${name.replace(/([.$?*|{}()[\\]\\/+^])/g, "\\$1")}=([^;]*)`)
+  );
+  return m ? decodeURIComponent(m[1]) : "";
+};
+
+async function parseResponse(res) {
+  if (res.status === 204) return null;
+  const text = await res.text().catch(() => "");
+  if (!res.ok) {
+    let err;
+    try {
+      err = text ? JSON.parse(text) : {};
+    } catch {
+      err = { message: text || res.statusText };
+    }
+    err.status = res.status;
+    throw err;
+  }
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+/** Core fetch with sane defaults (cookies+csrf, merge-patch for PATCH) */
+export async function http(
+  path,
+  { method = "GET", body, headers = {}, timeoutMs = 20000, methodOverride } = {}
+) {
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () => controller.abort(new DOMException("Timeout", "AbortError")),
+    timeoutMs
+  );
+
+  try {
+    const token = getAuthToken();
+    const url = buildUrl(path);
+    const formLike = isFormOrBlob(body);
+    const upperMethod = String(method).toUpperCase();
+
+    const hasContentType = Object.keys(headers).some(
+      (k) => k.toLowerCase() === "content-type"
+    );
+    const defaultCT =
+      formLike
+        ? undefined
+        : upperMethod === "PATCH"
+        ? "application/merge-patch+json"
+        : "application/json";
+
+    const xsrf =
+      getCookie("XSRF-TOKEN") ||
+      getCookie("CSRF-TOKEN") ||
+      getCookie("XSRF") ||
+      getCookie("csrftoken");
+
+    const finalHeaders = {
+      Accept: "application/hal+json, application/json, text/plain;q=0.8,*/*;q=0.5",
+      ...(defaultCT && !hasContentType ? { "Content-Type": defaultCT } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
+      ...(methodOverride ? { "X-HTTP-Method-Override": String(methodOverride).toUpperCase() } : {}),
+      ...headers,
+    };
+
+    const finalMethod = methodOverride ? "POST" : upperMethod;
+
+    const payload =
+      body == null
+        ? undefined
+        : formLike
+        ? body
+        : typeof body === "object" &&
+          (finalHeaders["Content-Type"] || finalHeaders["content-type"] || "").includes("json")
+        ? JSON.stringify(body)
+        : body;
+
+    const res = await fetch(url, {
+      method: finalMethod,
+      mode: "cors",
+      credentials: "include",
+      headers: finalHeaders,
+      body: payload,
+      signal: controller.signal,
+    });
+
+    return await parseResponse(res);
+  } catch (e) {
+    if (e?.name === "AbortError") throw { status: 0, message: "⏱️ Request timed out" };
+    throw { status: e?.status ?? 0, message: e?.message || "🌐 Network or CORS error" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Same as http(), but returns { data, headers, status } so we can read ETag */
+export async function httpRaw(
+  path,
+  { method = "GET", body, headers = {}, timeoutMs = 20000, methodOverride } = {}
+) {
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () => controller.abort(new DOMException("Timeout", "AbortError")),
+    timeoutMs
+  );
+
+  try {
+    const token = getAuthToken();
+    const url = buildUrl(path);
+    const formLike = isFormOrBlob(body);
+    const upperMethod = String(method).toUpperCase();
+    const hasContentType = Object.keys(headers).some(
+      (k) => k.toLowerCase() === "content-type"
+    );
+    const defaultCT =
+      formLike
+        ? undefined
+        : upperMethod === "PATCH"
+        ? "application/merge-patch+json"
+        : "application/json";
+
+    const xsrf =
+      getCookie("XSRF-TOKEN") ||
+      getCookie("CSRF-TOKEN") ||
+      getCookie("XSRF") ||
+      getCookie("csrftoken");
+
+    const finalHeaders = {
+      Accept: "application/hal+json, application/json, text/plain;q=0.8,*/*;q=0.5",
+      ...(defaultCT && !hasContentType ? { "Content-Type": defaultCT } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
+      ...(methodOverride ? { "X-HTTP-Method-Override": String(methodOverride).toUpperCase() } : {}),
+      ...headers,
+    };
+
+    const finalMethod = methodOverride ? "POST" : upperMethod;
+
+    const payload =
+      body == null
+        ? undefined
+        : formLike
+        ? body
+        : typeof body === "object" &&
+          (finalHeaders["Content-Type"] || finalHeaders["content-type"] || "").includes("json")
+        ? JSON.stringify(body)
+        : body;
+
+    const res = await fetch(url, {
+      method: finalMethod,
+      mode: "cors",
+      credentials: "include",
+      headers: finalHeaders,
+      body: payload,
+      signal: controller.signal,
+    });
+
+    const text = await res.text().catch(() => "");
+    let data = null;
+    if (text) {
+      try { data = JSON.parse(text); } catch { data = text; }
+    }
+    if (!res.ok) {
+      const err = typeof data === "object" ? data : { message: data || res.statusText };
+      err.status = res.status;
+      throw err;
+    }
+    return { data, headers: res.headers, status: res.status };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+http.get = (url, opts) => http(url, { ...opts, method: "GET" });
+http.post = (url, body, opts) => http(url, { ...opts, method: "POST", body });
+http.put = (url, body, opts) => http(url, { ...opts, method: "PUT", body });
+http.patch = (url, body, opts) => http(url, { ...opts, method: "PATCH", body });
+http.delete = (url, opts) => http(url, { ...opts, method: "DELETE" });
+
+console.log(`%c✅ HTTP client initialized → ${API_BASE}`, "color: lime; font-weight: bold; font-size: 13px;");

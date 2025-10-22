@@ -1,0 +1,129 @@
+/* index.css
+@import "@syncfusion/ej2-base/styles/bootstrap5.css";
+@import "@syncfusion/ej2-buttons/styles/bootstrap5.css";
+@import "@syncfusion/ej2-layouts/styles/bootstrap5.css";
+@import "@syncfusion/ej2-dropdowns/styles/bootstrap5.css";
+@import "@syncfusion/ej2-inputs/styles/bootstrap5.css";
+@import "@syncfusion/ej2-navigations/styles/bootstrap5.css";
+@import "@syncfusion/ej2-popups/styles/bootstrap5.css";
+@import "@syncfusion/ej2-react-kanban/styles/bootstrap5.css";
+
+/* Fonts */
+
+
+
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+
+/* Base Theme Colors */
+:root {
+  --color-primary: #1E40AF;
+  --color-secondary: #F97316;
+  --color-accent: #6347E9;
+  --color-highlight: #3EE6BF;
+  --color-danger: #D0090D;
+  --color-text: rgba(0, 0, 0, 0.8);
+
+  --color-primary-hover: #2563EB;
+  --color-secondary-hover: #EA580C;
+  --color-accent-hover: #7C3AED;
+  --color-highlight-hover: #2DD4BF;
+  --color-danger-hover: #DC2626;
+}
+
+.text-primary {
+  color: var(--color-primary);
+  transition: color 0.25s ease;
+}
+.text-primary:hover {
+  color: var(--color-primary-hover);
+}
+
+.text-secondary {
+  color: var(--color-secondary);
+  transition: color 0.25s ease;
+}
+.text-secondary:hover {
+  color: var(--color-secondary-hover);
+}
+
+.text-accent {
+  color: var(--color-accent);
+  transition: color 0.25s ease;
+}
+.text-accent:hover {
+  color: var(--color-accent-hover);
+}
+
+.text-highlight {
+  color: var(--color-highlight);
+  transition: color 0.25s ease;
+}
+.text-highlight:hover {
+  color: var(--color-highlight-hover);
+}
+
+.text-danger {
+  color: var(--color-danger);
+  transition: color 0.25s ease;
+}
+.text-danger:hover {
+  color: var(--color-danger-hover);
+}
+
+/* Background Colors */
+.bg-primary { background-color: var(--color-primary); }
+.bg-secondary { background-color: var(--color-secondary); }
+.bg-accent { background-color: var(--color-accent); }
+.bg-highlight { background-color: var(--color-highlight); }
+.bg-danger { background-color: var(--color-danger); }
+.bg-default { background-color: var(--color-text); }
+
+/* ✅ Hover Effects — Only for Buttons and NavLinks */
+button.bg-primary:hover,
+a.bg-primary:hover {
+  background-color: var(--color-primary-hover);
+  color: #fff !important;
+}
+
+button.bg-secondary:hover,
+a.bg-secondary:hover {
+  background-color: var(--color-secondary-hover);
+  color: #fff !important;
+}
+
+button.bg-accent:hover,
+a.bg-accent:hover {
+  background-color: var(--color-accent-hover);
+  color: #fff !important;
+}
+
+button.bg-highlight:hover,
+a.bg-highlight:hover {
+  background-color: var(--color-highlight-hover);
+  color: #fff !important;
+}
+
+button.bg-danger:hover,
+a.bg-danger:hover {
+  background-color: var(--color-danger-hover);
+  color: #fff !important;
+}
+
+/* Optional Light Mode */
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+}
