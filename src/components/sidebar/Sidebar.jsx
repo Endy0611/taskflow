@@ -115,21 +115,21 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, setShowModal }) {
   useEffect(() => {
     loadWorkspaces();
   }, []);
-// ✅ Auto refresh workspaces when workspace is created or updated
-useEffect(() => {
-  const refresh = () => loadWorkspaces();
+  // ✅ Auto refresh workspaces when workspace is created or updated
+  useEffect(() => {
+    const refresh = () => loadWorkspaces();
 
-  // Listen to global event and localStorage sync
-  window.addEventListener("workspace:changed", refresh);
-  window.addEventListener("storage", (e) => {
-    if (e.key === "refresh_workspaces") loadWorkspaces();
-  });
+    // Listen to global event and localStorage sync
+    window.addEventListener("workspace:changed", refresh);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "refresh_workspaces") loadWorkspaces();
+    });
 
-  return () => {
-    window.removeEventListener("workspace:changed", refresh);
-    window.removeEventListener("storage", refresh);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("workspace:changed", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
 
   // Toggle dropdown for each workspace
   const toggleDropdown = (id) => {
@@ -154,17 +154,14 @@ useEffect(() => {
 
   // Function to handle navigation to the correct page (Board, Member, or Setting)
   function navigateToWorkspacePage(workspaceId, type) {
-  if (type === "boards") {
-    navigate(`/board/${workspaceId}`);
-  } else if (type === "members") {
-    navigate(`/workspacemember/${workspaceId}`);
-  } else if (type === "settings") {
-    navigate(`/workspacesetting/${workspaceId}`);
+    if (type === "boards") {
+      navigate(`/board/${workspaceId}`);
+    } else if (type === "members") {
+      navigate(`/workspacemember/${workspaceId}`);
+    } else if (type === "settings") {
+      navigate(`/workspacesetting/${workspaceId}`);
+    }
   }
-
-
-}
-
 
   return (
     <aside
@@ -192,7 +189,7 @@ useEffect(() => {
 
         {/* Navigation items */}
         <div className="space-y-1">
-          <NavItem icon={<Home size={16} />} text="Home" to="/homeuser" />
+          <NavItem icon={<Home size={16} />} text="Homepage" to="/homeuser" />
           <NavItem
             icon={<LayoutGrid size={16} />}
             text="Boards"
