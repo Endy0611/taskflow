@@ -324,7 +324,7 @@ export default function ProjectManagement() {
           <div className="relative z-10 w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
             <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
               <h1 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
-                {boardName}
+                <b>{boardName}</b>
               </h1>
 
               <button
@@ -533,7 +533,7 @@ export default function ProjectManagement() {
               ) : (
                 <button
                   onClick={() => setShowAddList(true)}
-                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-primary dark:text-purple-400 px-4 py-3 w-full rounded-lg flex items-center justify-center hover:bg-white/95 dark:hover:bg-gray-800/95 shadow-lg"
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-primary dark:text-white px-4 py-3 w-full rounded-lg flex items-center justify-center hover:bg-white/95 dark:hover:bg-gray-800/95 shadow-lg"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   <span className="text-sm font-medium">Add Card</span>
