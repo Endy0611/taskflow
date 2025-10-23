@@ -37,7 +37,7 @@ const AboutUs = () => {
     {
       name: "Ms. Dorn Dana",
       role: "Web Design",
-      img: "/assets/About/dana.png",
+      img: "/assets/About/Dana.png",
       github: "https://github.com/danadorn",
       linkedin: "#",
       email: "#",
@@ -57,7 +57,7 @@ const AboutUs = () => {
     {
       name: "Mr. Ong Endy",
       role: "Java App",
-      img: "/assets/About/endy.png",
+      img: "/assets/About/Endy.png",
       github: "https://github.com/Endy0611",
       linkedin: "#",
       email: "endyong18@gmail.com",
@@ -67,7 +67,7 @@ const AboutUs = () => {
     {
       name: "Ms. Mon Sreynet",
       role: "Web Design",
-      img: "/assets/About/sreynet.png",
+      img: "/assets/About/Sreynet.png",
       github: "https://github.com/sreynetmon",
       linkedin: "#",
       email: "sreynet1409@gmail.com",
@@ -77,7 +77,7 @@ const AboutUs = () => {
     {
       name: "Ms. Tith Cholna",
       role: "Web Design",
-      img: "/assets/About/cholna.png",
+      img: "/assets/About/Cholna.png",
       github: "https://github.com/Activity007",
       linkedin: "#",
       email: "#",
@@ -295,7 +295,7 @@ const AboutUs = () => {
             {/* Image Side */}
             <div className="relative md:w-1/2 bg-primary flex justify-center items-end rounded-tl-3xl">
               <img
-                src="src/assets/About/cher chhaya.png"
+                src="/assets/About/cher chhaya.png"
                 alt="Mr. Chan Chhaya"
                 className="w-52 sm:w-60 md:w-72 object-contain relative md:absolute md:bottom-0"
               />
@@ -347,7 +347,7 @@ const AboutUs = () => {
             {/* Image Side */}
             <div className="relative md:w-1/2 bg-primary flex justify-center items-end rounded-tr-3xl">
               <img
-                src="src/assets/About/cher cheat.png"
+                src="/assets/About/cher cheat.png"
                 alt="Ms. Srong Sokcheat"
                 className="w-52 sm:w-60 md:w-72 object-contain relative md:absolute md:bottom-0"
               />

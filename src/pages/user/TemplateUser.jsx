@@ -3,14 +3,14 @@ import { Search, Grid, List, SidebarOpen as SidebarIcon, Menu } from "lucide-rea
 import TemplateSection from "../template/TemplateSection";
 import { templates, categories } from "../../features/template/templatesData";
 import { NavLink } from "react-router-dom";
-import Sidebar from "../../components/sidebar/Sidebar";
+// import Sidebar from "../../components/sidebar/Sidebar";
 
 export default function TemplateUser() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [darkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showModal, setShowModal] = useState(false); // optional if Sidebar needs it
 
   // Sync dark mode with <html> tag
@@ -23,15 +23,15 @@ export default function TemplateUser() {
   }, [darkMode]);
 
   // Close sidebar automatically below lg
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const handleChange = (e) => {
-      if (!e.matches) setSidebarOpen(false);
-    };
-    handleChange(mq);
-    mq.addEventListener("change", handleChange);
-    return () => mq.removeEventListener("change", handleChange);
-  }, []);
+  // useEffect(() => {
+  //   const mq = window.matchMedia("(min-width: 1024px)");
+  //   const handleChange = (e) => {
+  //     if (!e.matches) setSidebarOpen(false);
+  //   };
+  //   handleChange(mq);
+  //   mq.addEventListener("change", handleChange);
+  //   return () => mq.removeEventListener("change", handleChange);
+  // }, []);
 
   const categoryData = [
     { id: "All", name: "All", count: templates.length, color: "bg-blue-500" },
@@ -78,29 +78,29 @@ export default function TemplateUser() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Overlay for mobile */}
-      {sidebarOpen && (
+      {/* {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-[1px] z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
-      )}
+      )} */}
 
       {/* Sidebar */}
-      <Sidebar
+      {/* <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         setShowModal={setShowModal}
-      />
+      /> */}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:pt-16">
         {/* Hamburger (Mobile) */}
-        <button
+        {/* <button
             className="lg:hidden p-2 mb-4 rounded-md bg-primary text-white "
             aria-label="Toggle sidebar"
             onClick={() => setSidebarOpen((v) => !v)}
           >
             <Menu className="w-5 h-5" />
-          </button>
+          </button> */}
 
         {/* ===== Header ===== */}
         <div className="text-center mb-12 flex flex-col items-center">

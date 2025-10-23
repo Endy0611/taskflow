@@ -1,17 +1,18 @@
+// ...existing code...
 import { useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 
 import Sidebar, {
   notifyWorkspacesChanged,
-  notifyBoardsChanged,  // ✅ add this line
+  notifyBoardsChanged,
 } from "../../components/sidebar/Sidebar";
 
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import TaskFlowChatbot from "../../components/chatbot/Chatbot";
 import { CreateBoardComponent } from "../../components/task/CreateBoardComponent";
 import { Menu } from "lucide-react";
-import { http } from "../../services/http"; // ✅ unified API helper
+import { http } from "../../services/http";
 
 const THEME_OPTIONS = ["ANGKOR", "BAYON", "BOKOR", "KIRIROM", "KOH_KONG"];
 
@@ -51,9 +52,7 @@ export default function Board() {
 
   // ✅ Always store numeric workspace ID
   const workspaceIdRaw =
-    params.workspaceId ??
-    params.id ??
-    localStorage.getItem("current_workspace_id");
+    params.workspaceId ?? params.id ?? localStorage.getItem("current_workspace_id");
   const workspaceId = workspaceIdRaw ? Number(workspaceIdRaw) : null;
 
   /* ---------------- UI State ---------------- */
@@ -186,24 +185,26 @@ export default function Board() {
     mq.addEventListener("change", handleChange);
     return () => mq.removeEventListener("change", handleChange);
   }, []);
-  // ✅ Auto-refresh when new board is created or updated
-useEffect(() => {
-  const refreshBoards = async () => {
-    if (!workspaceId) return;
-    const boardsData = await fetchBoardsForWorkspace(Number(workspaceId));
-    setBoards(boardsData);
-  };
 
-  window.addEventListener("board:changed", refreshBoards);
-  window.addEventListener("storage", (e) => {
-    if (e.key === "refresh_boards") refreshBoards();
-  });
+  /* ---------------- Auto-refresh when new board is created or updated ----------------
+     Changed: Remove storage-based refresh. Listen only to custom 'board:changed' event.
+     This avoids page refresh / manual reloads and keeps boards list up-to-date automatically.
+  ---------------- */
+  useEffect(() => {
+    const refreshBoards = async () => {
+      if (!workspaceId) return;
+      const boardsData = await fetchBoardsForWorkspace(Number(workspaceId));
+      setBoards(boardsData);
+      // update cache
+      localStorage.setItem(`boards-${workspaceId}`, JSON.stringify(boardsData));
+    };
 
-  return () => {
-    window.removeEventListener("board:changed", refreshBoards);
-    window.removeEventListener("storage", refreshBoards);
-  };
-}, [workspaceId]);
+    window.addEventListener("board:changed", refreshBoards);
+
+    return () => {
+      window.removeEventListener("board:changed", refreshBoards);
+    };
+  }, [workspaceId]);
 
   /* ---------------- Create Workspace ---------------- */
   const [workspaceName, setWorkspaceName] = useState("");
@@ -230,9 +231,8 @@ useEffect(() => {
       const workspaceUrl = workspaceRes?._links?.self?.href;
       const workspaceId = workspaceUrl?.split("/").pop();
       if (!workspaceId) throw new Error("Workspace ID missing in response");
-      // console.log("✅ Workspace created:", workspaceId);
 
-      // 2️⃣ Add creator as owner (correct endpoint)
+      // 2️⃣ Add creator as owner
       const payload = {
         user: `/users/${userId}`,
         workspace: `/workspaces/${workspaceId}`,
@@ -240,11 +240,7 @@ useEffect(() => {
         isAccepted: true,
       };
 
-      // console.log("📦 AddMember Payload:", payload);
-
-      // ✅ Correct endpoint (no /addMembers)
-      const addMemberRes = await http.post("/workspaceMembers", payload);
-      // console.log("👑 Member added:", addMemberRes);
+      await http.post("/workspaceMembers", payload);
 
       // 3️⃣ Refresh user workspace list
       notifyWorkspacesChanged();
@@ -259,29 +255,35 @@ useEffect(() => {
     }
   }
 
-  /* -------- When a board is created, navigate to its ProjectManagement page -------- */
-const handleBoardCreated = (created) => {
-  const id =
-    created?.id ??
-    created?.boardId ??
-    getIdFromHref(created?._links?.self?.href, "boards") ??
-    getIdFromHref(created?.links?.self?.href, "boards");
+  /* ---------------- When a board is created, show it like workspace creation ---------------- */
+  const handleBoardCreated = async (created) => {
+    const id =
+      created?.id ??
+      created?.boardId ??
+      getIdFromHref(created?._links?.self?.href, "boards") ??
+      getIdFromHref(created?.links?.self?.href, "boards");
 
-  const wsId = Number(getWorkspaceIdFromBoard(created, workspaceId, workspace));
+    const wsId = Number(getWorkspaceIdFromBoard(created, workspaceId, workspace));
 
-  setBoards((prev) => [created, ...prev]);
+    // ✅ Show success toast first
+    toast.success("Board created successfully!");
 
-  // ✅ Trigger global auto-refresh for all pages
-  notifyBoardsChanged();
-  toast.success("Board created successfully!");  // optional feedback
+    // ✅ Close the create modal immediately
+    setShowCreateBoard(false);
 
-  if (id && wsId) {
-    navigate(`/board/${wsId}/${id}`);
-  } else {
-    console.warn("Missing workspaceId or boardId after create:", { created });
-  }
-};
+    // ✅ Immediately fetch fresh boards list from server and update UI (no page refresh)
+    if (wsId) {
+      const freshBoards = await fetchBoardsForWorkspace(wsId);
+      setBoards(freshBoards);
+      // update cache
+      localStorage.setItem(`boards-${wsId}`, JSON.stringify(freshBoards));
+    }
 
+    // ✅ Notify other parts of app that boards changed (keeps other pages in sync)
+    notifyBoardsChanged();
+
+    // NO navigation or full page reload here — UI is updated in-place
+  };
 
   return (
     <div className="h-screen flex flex-col dark:bg-gray-900 dark:text-white">
@@ -508,7 +510,7 @@ const handleBoardCreated = (created) => {
                         </div>
                         <button
                           className="absolute inset-0"
-                          onClick={() => navigate(`/projectmanagement/${id}`)} // ✅ go to ProjectManagement page
+                          onClick={() => navigate(`/projectmanagement/${id}`)}
                           aria-label={`Open ${board.title || id}`}
                         />
                       </div>
@@ -563,7 +565,7 @@ const handleBoardCreated = (created) => {
         )}
       </AnimatePresence>
 
-      {/* Create Workspace Modal (ONLY this one) */}
+      {/* Create Workspace Modal */}
       <AnimatePresence>
         {showWorkspaceModal && (
           <>
@@ -583,7 +585,7 @@ const handleBoardCreated = (created) => {
             >
               <div className="bg-white dark:bg-gray-800 dark:text-white rounded-xl shadow-lg max-w-lg w-full p-6 md:p-8 relative">
                 <h2 className="text-xl md:text-2xl font-bold mb-2">
-                  Let’s build a Workspace
+                  Let's build a Workspace
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm md:text-base">
                   Boost your productivity by grouping boards in one place.
@@ -676,6 +678,7 @@ const handleBoardCreated = (created) => {
           </>
         )}
       </AnimatePresence>
+
       <Toaster
         position="bottom-right"
         toastOptions={{
@@ -691,3 +694,4 @@ const handleBoardCreated = (created) => {
     </div>
   );
 }
+// ...existing code...

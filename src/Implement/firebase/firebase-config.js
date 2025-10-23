@@ -25,11 +25,11 @@ if (!cfg.apiKey) {
     "⚠️ Firebase API key is missing. Check your environment variables (.env.production or Vercel Settings).",
     cfg
   );
-} else {
-  console.log("🔥 Firebase config loaded successfully:", {
-    apiKeyPrefix: cfg.apiKey.slice(0, 6),
-    projectId: cfg.projectId,
-  });
+// } else {
+//   console.log("🔥 Firebase config loaded successfully:", {
+//     apiKeyPrefix: cfg.apiKey.slice(0, 6),
+//     projectId: cfg.projectId,
+//   });
 }
 
 // ✅ Initialize Firebase app

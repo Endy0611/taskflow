@@ -2,13 +2,13 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { http } from "../../services/http"; // API helper
 
-export function CreateBoardComponent({ onClose }) {
+export function CreateBoardComponent({ onClose, onSuccess, workspaceId }) {
   const [boardTitle, setBoardTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
 
-  const workspaceId = localStorage.getItem("current_workspace_id"); // Assuming workspace ID is saved in localStorage
+  // ✅ Use workspaceId from props, fallback to localStorage
+  const wsId = workspaceId || localStorage.getItem("current_workspace_id");
 
   const handleCreateBoard = async (e) => {
     e.preventDefault();
@@ -20,19 +20,24 @@ export function CreateBoardComponent({ onClose }) {
 
     setLoading(true);
     setError(null);
-    setSuccessMessage(null);
 
     try {
       // Send request to create the board in the selected workspace
       const data = await http.post("/boards", {
         title: boardTitle,
-        workspace: `/workspaces/${workspaceId}`, // Use workspace ID from localStorage
+        workspace: `/workspaces/${wsId}`,
       });
 
-      // Handle successful board creation
-      setSuccessMessage("Board created successfully!");
-      setBoardTitle(""); // Reset input field
-      onClose(); // Close the modal
+      // console.log("✅ Board created response:", data);
+
+      // ✅ Call onSuccess with the created board data
+      if (onSuccess) {
+        onSuccess(data);
+      }
+
+      // Reset and close
+      setBoardTitle("");
+      // Don't call onClose here - let the parent handle it after onSuccess
     } catch (err) {
       // Handle error
       const status = err?.response?.status ?? err?.status;
@@ -41,6 +46,7 @@ export function CreateBoardComponent({ onClose }) {
           ? `Error ${status}: ${err?.response?.data?.message || err?.statusText || "Request failed"}`
           : err?.message || "Network error";
       setError(message);
+      console.error("❌ Board creation error:", err);
     } finally {
       setLoading(false);
     }
@@ -67,26 +73,25 @@ export function CreateBoardComponent({ onClose }) {
           value={boardTitle}
           onChange={(e) => setBoardTitle(e.target.value)}
           className="w-full border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md bg-white dark:bg-gray-700 dark:text-white focus:outline-none"
+          placeholder="e.g., Marketing Campaign"
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
       </div>
-
-      {/* Success Message */}
-      {successMessage && (
-        <p className="text-green-500 text-sm">{successMessage}</p>
-      )}
 
       {/* Buttons */}
       <div className="flex gap-3 pt-4">
         <button
           onClick={handleCreateBoard}
           disabled={loading}
-          className="bg-primary text-white px-4 py-2 rounded-md flex-1 disabled:opacity-60"
+          className="bg-primary text-white px-4 py-2 rounded-md flex-1 disabled:opacity-60 hover:opacity-90"
         >
           {loading ? "Creating..." : "Create"}
         </button>
-        <button className="bg-secondary text-white px-4 py-2 rounded-md flex-1">
-          Start with a template
+        <button 
+          onClick={onClose}
+          className="bg-secondary text-white px-4 py-2 rounded-md flex-1 hover:opacity-90"
+        >
+          Cancel
         </button>
       </div>
     </div>

@@ -49,6 +49,7 @@ export default function ProjectManagement() {
   const [showAddList, setShowAddList] = useState(false);
   const [loadingCards, setLoadingCards] = useState(false);
   const [workspaceName, setWorkspaceName] = useState("TaskFlow");
+  const [boardName, setBoardName] = useState("Loading...");
 
   useEffect(() => {
     const fetchWorkspaceName = async () => {
@@ -68,18 +69,54 @@ export default function ProjectManagement() {
     };
     fetchWorkspaceName();
   }, [location.pathname]);
-  /* ===== Random Background Logic ===== */
+
   useEffect(() => {
+    const fetchBoardName = async () => {
+      if (!boardId) return;
+      try {
+        const res = await http.get(`/boards/${boardId}`);
+        const name = res?.data?.title || res?.title || res?.data?.name || res?.name || "Board";
+        setBoardName(name);
+        // console.log("✅ Board name fetched:", name, "Full response:", res);
+      } catch (err) {
+        console.error("❌ [Board Name] Error:", err);
+        setBoardName("Board");
+      }
+    };
+    fetchBoardName();
+  }, [boardId]);
+
+  /* ===== Random Background Logic (Per Board) ===== */
+  useEffect(() => {
+    if (!boardId) return;
+
     const selectedBg = localStorage.getItem("selectedBackground");
     if (selectedBg) {
       setBackgroundImage(selectedBg);
-      localStorage.setItem("boardBackground", selectedBg);
-      localStorage.removeItem("selectedBackground"); // clear after applying
+      localStorage.setItem(`boardBackground_${boardId}`, selectedBg);
+      localStorage.removeItem("selectedBackground");
     } else {
-      const savedBg = localStorage.getItem("boardBackground");
-      if (savedBg) setBackgroundImage(savedBg);
+      const savedBg = localStorage.getItem(`boardBackground_${boardId}`);
+      if (savedBg) {
+        setBackgroundImage(savedBg);
+      } else {
+        // Random nature backgrounds (no animals)
+        const backgrounds = [
+          "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80", // Mountain
+          "https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=1920&q=80", // Sunset sky
+          "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80", // Forest
+          "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80", // Beach/Sea
+          "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&q=80", // Ocean
+          "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=80", // Lake/Nature
+          "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1920&q=80", // Meadow
+          "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=1920&q=80", // Mountain lake
+        ];
+        const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+        setBackgroundImage(randomBg);
+        localStorage.setItem(`boardBackground_${boardId}`, randomBg);
+      }
     }
-  }, []);
+  }, [boardId]);
 
   /* ===== Fetch Cards & Tasks ===== */
   const fetchCards = async () => {
@@ -216,8 +253,9 @@ export default function ProjectManagement() {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("[CreateCard] ✅", res);
+      // console.log("[CreateCard] ✅", res);
       setNewListName("");
+      setShowAddList(false);
       fetchCards(); // refresh
     } catch (err) {
       console.error("[CreateCard] ❌", err);
@@ -283,10 +321,10 @@ export default function ProjectManagement() {
         >
           <div className="absolute inset-0" />
           {/* Top Bar */}
-          <div className="relative z-10 w-full bg-highlight dark:bg-gray-800">
+          <div className="relative z-10 w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
             <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
-              <h1 className="text-lg font-semibold text-gray-700">
-                {workspaceName}
+              <h1 className="text-lg font-semibold text-gray-700 dark:text-gray-100">
+                {boardName}
               </h1>
 
               <button
@@ -315,10 +353,10 @@ export default function ProjectManagement() {
                 key={list.id}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => onDrop(e, list.id)}
-                className="bg-highlight dark:bg-gray-800 rounded-lg p-3 w-64 relative"
+                className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg p-3 w-64 relative shadow-lg"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between mb-2 text-black">
+                <div className="flex items-center justify-between mb-2 text-black dark:text-gray-100">
                   {list.isEditing ? (
                     <input
                       type="text"
@@ -386,15 +424,10 @@ export default function ProjectManagement() {
                         <button
                           onClick={async () => {
                             try {
-                              // 1️⃣ Call API to delete on backend
                               await http.delete(`/cards/${list.id}`);
-
-                              // 2️⃣ Remove from frontend immediately
                               setLists((prev) =>
                                 prev.filter((l) => l.id !== list.id)
                               );
-
-                              // 3️⃣ Show confirmation
                               toast.success("Card deleted successfully!");
                             } catch (error) {
                               console.error("❌ Failed to delete card:", error);
@@ -461,7 +494,7 @@ export default function ProjectManagement() {
                 ) : (
                   <button
                     onClick={() => setActiveListForCard(list.id)}
-                    className="text-xs text-white mt-2 bg-primary p-2 rounded dark:bg-purple-600 dark:hover:bg-purple-700"
+                    className="text-xs text-white mt-2 bg-primary p-2 rounded dark:bg-purple-600 dark:hover:bg-purple-700 w-full"
                   >
                     + Add Task
                   </button>
@@ -472,8 +505,8 @@ export default function ProjectManagement() {
             {/* Add Card Column */}
             <div className="w-64">
               {showAddList ? (
-                <div className="bg-highlight dark:bg-gray-800 p-3 rounded-lg shadow">
-                  <p className="text-center text-black font-semibold pb-2">
+                <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-3 rounded-lg shadow-lg">
+                  <p className="text-center text-black dark:text-gray-100 font-semibold pb-2">
                     Create Card
                   </p>
                   <input
@@ -500,7 +533,7 @@ export default function ProjectManagement() {
               ) : (
                 <button
                   onClick={() => setShowAddList(true)}
-                  className="bg-highlight text-primary dark:bg-gray-800 px-4 py-3 w-full rounded-lg flex items-center justify-center hover:bg-teal-300 dark:hover:bg-gray-700"
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-primary dark:text-purple-400 px-4 py-3 w-full rounded-lg flex items-center justify-center hover:bg-white/95 dark:hover:bg-gray-800/95 shadow-lg"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   <span className="text-sm font-medium">Add Card</span>
@@ -527,7 +560,17 @@ export default function ProjectManagement() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-          ></motion.div>
+            onClick={() => setShowShare(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ShareBoardComponent onClose={() => setShowShare(false)} />
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
