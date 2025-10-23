@@ -5,6 +5,7 @@ import tailwind from "@tailwindcss/vite";
 const API_BASE = "https://taskflow-api.istad.co";
 
 export default defineConfig({
+  base: "/", // ✅ ensure correct base path for Vercel
   plugins: [react(), tailwind()],
   server: {
     host: true,
